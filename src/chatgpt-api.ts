@@ -18,6 +18,7 @@ export class ChatGPTAPI {
   protected _apiBaseUrl: string
   protected _apiOrg?: string
   protected _debug: boolean
+  protected _azure?: boolean
 
   protected _systemMessage: string
   protected _completionParams: Omit<
@@ -54,6 +55,7 @@ export class ChatGPTAPI {
       apiOrg,
       apiBaseUrl = 'https://api.openai.com/v1',
       debug = false,
+      azure = false,
       messageStore,
       completionParams,
       systemMessage,
@@ -69,6 +71,7 @@ export class ChatGPTAPI {
     this._apiBaseUrl = apiBaseUrl
     this._debug = !!debug
     this._fetch = fetch
+    this._azure = azure
 
     this._completionParams = {
       model: CHATGPT_MODEL,
@@ -112,6 +115,25 @@ export class ChatGPTAPI {
     }
   }
 
+  async queryMessageHistory(
+    parentMessageId: string
+  ): Promise<Array<types.ChatMessage>> {
+    const messages: Array<types.ChatMessage> = []
+
+    do {
+      const parentMessage = await this._getMessageById(parentMessageId)
+      if (!parentMessage) {
+        break
+      }
+      messages.push(parentMessage)
+      parentMessageId = parentMessage.id
+    } while (true)
+
+    return new Promise<Array<types.ChatMessage>>((resolve) => {
+      resolve([])
+    })
+  }
+
   /**
    * Sends a message to the OpenAI chat completions endpoint, waits for the response
    * to resolve, and returns the response.
@@ -140,6 +162,7 @@ export class ChatGPTAPI {
   ): Promise<types.ChatMessage> {
     const {
       parentMessageId,
+      promptText,
       messageId = uuidv4(),
       timeoutMs,
       onProgress,
@@ -181,11 +204,17 @@ export class ChatGPTAPI {
 
     const responseP = new Promise<types.ChatMessage>(
       async (resolve, reject) => {
-        const url = `${this._apiBaseUrl}/chat/completions`
+        let url = `${this._apiBaseUrl}/chat/completions`
         const headers = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this._apiKey}`
         }
+
+        if (this._azure) {
+          url += '?api-version=2023-03-15-preview'
+          headers['api-key'] = this._apiKey
+        }
+
         const body = {
           max_tokens: maxTokens,
           ...this._completionParams,
@@ -376,11 +405,12 @@ export class ChatGPTAPI {
     }
 
     const systemMessageOffset = messages.length
+    const question = opts.promptText ? opts.promptText : text
     let nextMessages = text
       ? messages.concat([
           {
             role: 'user',
-            content: text,
+            content: question,
             name: opts.name
           }
         ])
@@ -420,6 +450,7 @@ export class ChatGPTAPI {
       }
 
       const parentMessage = await this._getMessageById(parentMessageId)
+
       if (!parentMessage) {
         break
       }

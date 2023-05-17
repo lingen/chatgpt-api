@@ -1,6 +1,6 @@
 {
-  "name": "chatgpt",
-  "version": "5.2.2",
+  "name": "@lingen.liu/chatgpt",
+  "version": "5.2.3",
   "description": "Node.js client for the official ChatGPT API.",
   "author": "Travis Fischer <travis@transitivebullsh.it>",
   "repository": "transitive-bullshit/chatgpt-api",
@@ -39,6 +39,7 @@
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.2",
     "cac": "^6.7.14",
+    "chatgpt": "^5.2.2",
     "conf": "^11.0.1",
     "eventsource-parser": "^1.0.0",
     "keyv": "^4.5.2",

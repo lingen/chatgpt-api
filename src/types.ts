@@ -15,6 +15,8 @@ export type ChatGPTAPIOptions = {
   /** @defaultValue `false` **/
   debug?: boolean
 
+  azure?: boolean
+
   completionParams?: Partial<
     Omit<openai.CreateChatCompletionRequest, 'messages' | 'n' | 'stream'>
   >
@@ -37,6 +39,7 @@ export type ChatGPTAPIOptions = {
 export type SendMessageOptions = {
   /** The name of a user in a multi-user chat. */
   name?: string
+  promptText?: string
   parentMessageId?: string
   conversationId?: string
   messageId?: string
